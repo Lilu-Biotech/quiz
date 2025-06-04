@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Biología Molecular</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Fondo suave */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 500px; /* Altura mínima para el contenedor del quiz */
+        }
+        .question-section {
+            padding: 30px;
+            transition: background-color 0.5s ease;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .options-container label {
+            display: block;
+            background-color: #f8fafc;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+        }
+        .options-container label:hover {
+            background-color: #eef2f6;
+            border-color: #cbd5e1;
+        }
+        .options-container input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+        }
+        .options-container input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: #2563eb; /* Color azul para la opción seleccionada */
+        }
+        .navigation-buttons {
+            padding: 20px 30px;
+            background-color: #f0f4f8;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Indigo */
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #4338ca;
+        }
+
+        .results-section {
+            padding: 30px;
+            background-color: #f8fafc;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .results-section h2 {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+            color: #1e293b; /* slate-800 */
+            margin-bottom: 15px;
+        }
+        .results-section p {
+            font-size: 1.5rem; /* text-2xl */
+            color: #334155; /* slate-700 */
+            margin-bottom: 25px;
+        }
+        .correct-answers-section {
+            margin-top: 30px;
+            text-align: left;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .correct-answers-section h3 {
+            font-size: 1.75rem; /* text-3xl */
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .correct-answers-section .answer-item {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+        .correct-answers-section .answer-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .correct-answers-section .question-text {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 1.125rem; /* text-lg */
+        }
+        .correct-answers-section .correct-option {
+            font-weight: 700;
+            color: #059669; /* Esmeralda-600 */
+            margin-bottom: 5px;
+            font-size: 1rem; /* text-base */
+        }
+        .correct-answers-section .explanation-text {
+            color: #475569; /* slate-600 */
+            line-height: 1.6;
+            font-size: 0.95rem; /* text-sm */
+        }
+
+        /* Message Box Styling */
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-box-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .message-box h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #1e293b;
+        }
+        .message-box p {
+            font-size: 1rem;
+            color: #475569;
+            margin-bottom: 25px;
+        }
+        .message-box button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .message-box button:hover {
+            background-color: #4338ca;
+        }
+
+        /* Rainbow colors for question background */
+        .bg-rainbow-0 { background-color: #f87171; } /* red-400 */
+        .bg-rainbow-1 { background-color: #fb923c; } /* orange-400 */
+        .bg-rainbow-2 { background-color: #facc15; } /* yellow-400 */
+        .bg-rainbow-3 { background-color: #4ade80; } /* green-400 */
+        .bg-rainbow-4 { background-color: #60a5fa; } /* blue-400 */
+        .bg-rainbow-5 { background-color: #818cf8; } /* indigo-400 */
+        .bg-rainbow-6 { background-color: #c084fc; } /* purple-400 */
+
+        @media (max-width: 768px) {
+            .quiz-container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            body {
+                padding: 0;
+            }
+            .question-section, .navigation-buttons, .results-section, .correct-answers-section {
+                padding: 20px;
+            }
+            .results-section h2 {
+                font-size: 1.75rem;
+            }
+            .results-section p {
+                font-size: 1.25rem;
+            }
+            .correct-answers-section h3 {
+                font-size: 1.5rem;
+            }
+            .options-container label {
+                padding: 12px 15px;
+            }
+            .btn {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <!-- Sección del Quiz -->
+        <div id="quiz-section" class="question-section bg-rainbow-0 text-white">
+            <div>
+                <h2 id="question-number" class="text-xl font-semibold mb-4">Pregunta 1 de 18</h2>
+                <p id="question-text" class="text-2xl font-bold mb-8"></p>
+                <div id="options-container" class="options-container text-gray-800">
+                    <!-- Opciones de respuesta se cargarán aquí -->
+                </div>
+            </div>
+            <div class="navigation-buttons">
+                <button id="next-button" class="btn btn-primary">Siguiente</button>
+            </div>
+        </div>
+
+        <!-- Sección de Resultados (inicialmente oculta) -->
+        <div id="results-section" class="results-section hidden">
+            <h2>¡Quiz Completado!</h2>
+            <p>Tu calificación: <span id="score-display" class="font-bold"></span></p>
+            <div id="correct-answers-display" class="correct-answers-section">
+                <h3>Respuestas Correctas y Explicaciones</h3>
+                <!-- Respuestas correctas se cargarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box Overlay -->
+    <div id="message-box-overlay" class="message-box-overlay">
+        <div class="message-box">
+            <h4 id="message-box-title"></h4>
+            <p id="message-box-text"></p>
+            <button id="message-box-ok-button">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Datos del quiz: preguntas, opciones, respuestas correctas y explicaciones
+        const quizData = [
+            {
+                question: "¿Cuál es una característica distintiva de la actividad de la RNA polimerasa mencionada en las clases?",
+                options: [
+                    "Tiene actividad correctora 3’ → 5’.",
+                    "Solo transcribe genes para proteínas estructurales.",
+                    "Carece de actividad correctora 3’ → 5’.",
+                    "Utiliza timina en lugar de uracilo en el ARN.",
+                    "Siempre requiere un cebador de ARN para iniciar la transcripción."
+                ],
+                correctAnswer: "Carece de actividad correctora 3’ → 5’.",
+                explanation: "La RNA polimerasa, la enzima encargada de la transcripción, se distingue por no poseer la actividad de corrección de errores (proofreading) en la dirección 3’ → 5’. Esta característica implica que la transcripción puede ser menos precisa que la replicación del DNA, donde la DNA polimerasa sí tiene esta capacidad para asegurar la fidelidad de la copia."
+            },
+            {
+                question: "Según la definición vista en las clases, ¿qué se entiende por 'Expresión génica'?",
+                options: [
+                    "La replicación del DNA.",
+                    "La producción de mRNA o proteína en una célula.",
+                    "La modificación postraduccional de una proteína.",
+                    "La condensación del cromosoma.",
+                    "La reparación del DNA dañado."
+                ],
+                correctAnswer: "La producción de mRNA o proteína en una célula.",
+                explanation: "La expresión génica se define con precisión como el proceso por el cual la información codificada en un gen se utiliza para producir una molécula funcional en la célula, ya sea una molécula de ARN mensajero (mRNA) o una proteína. Es el paso fundamental para que la información genética se manifieste en las características o funciones celulares."
+            },
+            {
+                question: "¿Cómo se define un operón?",
+                options: [
+                    "Un solo gen que codifica múltiples proteínas.",
+                    "Un grupo de genes contiguos con múltiples promotores.",
+                    "Una secuencia de DNA que solo se encuentra en eucariotas.",
+                    "Un grupo de genes contiguos con un único promotor y transcrito como un solo mRNA (“Gen policistrónico”).",
+                    "Una proteína reguladora que se une al DNA para bloquear la transcripción."
+                ],
+                correctAnswer: "Un grupo de genes contiguos con un único promotor y transcrito como un solo mRNA (“Gen policistrónico”).",
+                explanation: "El operón es una unidad funcional de transcripción, particularmente común en procariotas, donde varios genes que participan en una misma vía metabólica se encuentran adyacentes en el cromosoma. Estos genes comparten un único promotor y son transcritos conjuntamente en una única molécula de mRNA, lo que permite una regulación coordinada de su expresión."
+            },
+            {
+                question: "Para que los genes del operón lactosa se expresen, ¿cuáles son las dos condiciones que deben cumplirse?",
+                options: [
+                    "Disponibilidad de glucosa y ausencia de lactosa.",
+                    "Disponibilidad de lactosa y ausencia de glucosa.",
+                    "Altos niveles de glucosa y lactosa.",
+                    "Ausencia de glucosa y triptófano.",
+                    "Presencia del represor lac y la proteína activadora de catabolitos (CAP) en sus formas activas."
+                ],
+                correctAnswer: "Disponibilidad de lactosa y ausencia de glucosa.",
+                explanation: "La bacteria E. coli solo invierte energía en metabolizar la lactosa si esta está disponible y, lo que es crucial, si no hay una fuente de energía más eficiente como la glucosa. El operón lac está finamente regulado para que sus genes solo se expresen bajo estas dos condiciones específicas, optimizando el uso de recursos energéticos por parte de la bacteria."
+            },
+            {
+                question: "¿Qué molécula actúa como un inductor para el Operón Lac, desencadenando su expresión?",
+                options: [
+                    "Glucosa",
+                    "AMPc",
+                    "Triptófano",
+                    "Alolactosa",
+                    "Peptidoglicano"
+                ],
+                correctAnswer: "Alolactosa",
+                explanation: "El operón lac es un operón inducible, lo que significa que normalmente está 'apagado' (reprimido). La alolactosa es un isómero de la lactosa que actúa como inductor: al unirse al represor lac, provoca un cambio conformacional que le impide unirse al operador del DNA, permitiendo así la transcripción de los genes del operón."
+            },
+            {
+                question: "¿De qué manera general la proteína activadora de catabolitos (CAP) contribuye a la activación de la transcripción en el operón lac?",
+                options: [
+                    "Se une directamente a la RNA polimerasa y la activa catalíticamente.",
+                    "Impide la unión del represor lac al operador, liberando el sitio de transcripción.",
+                    "Se une a una región del DNA justo antes del promotor y ayuda a la RNA polimerasa a unirse, impulsando altos niveles de transcripción.",
+                    "Degrada el mRNA del operón lac para acelerar su recambio.",
+                    "Se une al promotor del operón lac de forma independiente y exclusiva."
+                ],
+                correctAnswer: "Se une a una región del DNA justo antes del promotor y ayuda a la RNA polimerasa a unirse, impulsando altos niveles de transcripción.",
+                explanation: "La RNA polimerasa por sí misma no se une eficientemente al promotor del operón lac para iniciar una transcripción robusta. La proteína CAP, cuando se activa por la ausencia de glucosa (a través de cAMP), se une a una secuencia de DNA específica ubicada justo antes del promotor. Esta unión de CAP facilita la unión de la RNA polimerasa al promotor, lo que resulta en niveles muy altos de transcripción del operón lac."
+            },
+            {
+                question: "¿Cómo se regula la expresión del operón trp en respuesta a los niveles de triptófano en el medio, según las fuentes?",
+                options: [
+                    "Se expresa cuando los niveles de triptófano son altos.",
+                    "Se reprime cuando los niveles de triptófano son bajos.",
+                    "Se expresa cuando los niveles de triptófano son bajos y se reprime cuando son altos.",
+                    "Su expresión es independiente de los niveles de triptófano.",
+                    "Siempre está activado para asegurar un suministro constante de triptófano."
+                ],
+                correctAnswer: "Se expresa cuando los niveles de triptófano son bajos y se reprime cuando son altos.",
+                explanation: "El operón trp es responsable de la síntesis del aminoácido triptófano. Su regulación es un ejemplo de un operón represible: la bacteria solo produce triptófano cuando no está disponible en el ambiente (niveles bajos) y 'apaga' la producción cuando ya hay suficiente triptófano (niveles altos). Esto evita un gasto innecesario de energía en su biosíntesis."
+            },
+            {
+                question: "¿Cuál es el papel del triptófano en la regulación del operón trp?",
+                options: [
+                    "Actúa como un inductor, permitiendo la expresión del operón.",
+                    "Se une directamente a la RNA polimerasa para activarla.",
+                    "Es un correpresor, uniéndose al represor trp y cambiando su forma para que se vuelva activo y bloquee la transcripción.",
+                    "Inhibe la síntesis de la proteína represora trp.",
+                    "Es el producto final directo de la traducción del mRNA del operón trp."
+                ],
+                correctAnswer: "Es un correpresor, uniéndose al represor trp y cambiando su forma para que se vuelva activo y bloquee la transcripción.",
+                explanation: "El represor trp por sí solo está inactivo y no se une al DNA. Sin embargo, cuando el triptófano está presente en altas concentraciones, actúa como un correpresor. Se une al represor trp, induciendo un cambio conformacional que activa al represor y le permite unirse al DNA en el operador, bloqueando así la transcripción de los genes que sintetizan triptófano."
+            },
+            {
+                question: "En el mecanismo de atenuación del operón trp, ¿qué sucede cuando la concentración de triptófano es baja?",
+                options: [
+                    "El ribosoma se mueve rápidamente a lo largo de la guía, y se forma la horquilla terminadora, finalizando la transcripción.",
+                    "El ribosoma se mueve lentamente a lo largo de la guía, se forma la horquilla no terminadora (antiterminador), y la transcripción del operón trp continúa.",
+                    "El represor trp se une al DNA con más fuerza, independientemente del triptófano.",
+                    "La RNA polimerasa se desprende del DNA prematuramente, deteniendo la transcripción.",
+                    "La traducción se detiene completamente en el péptido líder."
+                ],
+                correctAnswer: "El ribosoma se mueve lentamente a lo largo de la guía, se forma la horquilla no terminadora (antiterminador), y la transcripción del operón trp continúa.",
+                explanation: "El mecanismo de atenuación depende del acoplamiento transcripción-traducción. Cuando los niveles de triptófano son bajos, el ribosoma se 'atasca' o traduce lentamente en la región líder del mRNA debido a la escasez de triptófano. Esta pausa provoca la formación de una estructura de horquilla en el mRNA (la horquilla no terminadora) que impide la formación de la horquilla terminadora. Como resultado, la RNA polimerasa puede continuar transcribiendo el resto del operón trp."
+            },
+            {
+                question: "¿Cómo se denomina la molécula que se produce directamente por transcripción en células eucariotas, y por qué se dice que necesita procesamiento?",
+                options: [
+                    "mRNA maduro; para ser exportado del citoplasma hacia el núcleo.",
+                    "tRNA; para unirse a aminoácidos en el citoplasma.",
+                    "pre-mRNA o transcrito primario; necesita pasar por unos cuantos pasos adicionales para convertirse en un mRNA propiamente dicho.",
+                    "rRNA; para formar los ribosomas en el citoplasma.",
+                    "DNA; porque se necesita para replicarse antes de la división celular."
+                ],
+                correctAnswer: "pre-mRNA o transcrito primario; necesita pasar por unos cuantos pasos adicionales para convertirse en un mRNA propiamente dicho.",
+                explanation: "A diferencia de los procariotas, donde el ARN transcrito está listo para la traducción, en eucariotas, la molécula de ARN recién sintetizada se denomina pre-mRNA o transcrito primario. Este ARN aún no es funcional como mensajero y debe someterse a varios procesos de modificación, como la adición de una caperuza 5', una cola poli-A en 3', y el empalme (splicing), antes de poder salir del núcleo y ser traducido a una proteína."
+            },
+            {
+                question: "¿Cuál es el propósito principal del splicing (empalme) en el procesamiento del RNA eucariota?",
+                options: [
+                    "Añadir la cola poli-A al extremo 3' del transcrito.",
+                    "Añadir la caperuza 5' al extremo 5' del transcrito.",
+                    "Eliminar algunas secciones del transcrito de RNA llamadas intrones y volver a unir las secciones restantes llamadas exones.",
+                    "Dirigir el mRNA del núcleo al citoplasma.",
+                    "Proteger el mRNA de la degradación por exonucleasas en el citoplasma."
+                ],
+                correctAnswer: "Eliminar algunas secciones del transcrito de RNA llamadas intrones y volver a unir las secciones restantes llamadas exones.",
+                explanation: "El splicing es un proceso de edición crucial en el procesamiento del pre-mRNA eucariota. Los genes eucariotas contienen secuencias no codificantes llamadas intrones intercaladas con secuencias codificantes llamadas exones. El spliceosoma, un complejo de ARN y proteínas, reconoce los intrones y los corta, uniendo luego los exones para formar un mRNA maduro y continuo que solo contiene información para la proteína."
+            },
+            {
+                question: "¿Cuál es la función principal de los ribosomas en el proceso de síntesis de proteínas?",
+                options: [
+                    "Replicar el DNA para la división celular.",
+                    "Transcribir el DNA a RNA mensajero.",
+                    "Sintetizar directamente los aminoácidos a partir de precursores.",
+                    "Reconocer, unirse y 'leer' el mRNA para producir una cadena de aminoácidos (proteína).",
+                    "Transportar aminoácidos a la célula desde el exterior."
+                ],
+                correctAnswer: "Reconocer, unirse y 'leer' el mRNA para producir una cadena de aminoácidos (proteína).",
+                explanation: "Los ribosomas son las 'fábricas de proteínas' de la célula. Su función principal es unirse a las moléculas de mRNA en el citoplasma y 'leer' la información codificada en los codones (tripletes de nucleótidos). A medida que leen, reclutan los aminoácidos correspondientes, que son traídos por los tRNA, y los unen para formar una cadena polipeptídica, que luego se pliega para convertirse en una proteína funcional."
+            },
+            {
+                question: "Durante la síntesis de proteínas, ¿cuál es el papel específico de las moléculas de tRNA?",
+                options: [
+                    "Actuar como catalizador para la formación del enlace peptídico en el ribosoma.",
+                    "Transportar aminoácidos específicos al ribosoma para que se incorporen a la cadena polipeptídica en crecimiento.",
+                    "Formar la estructura principal de las subunidades ribosomales.",
+                    "Codificar la secuencia de aminoácidos de la proteína.",
+                    "Proteger el mRNA de la degradación por enzimas citoplasmáticas."
+                ],
+                correctAnswer: "Transportar aminoácidos específicos al ribosoma para que se incorporen a la cadena polipeptídica en crecimiento.",
+                explanation: "Las moléculas de RNA de transferencia (tRNA) son cruciales para la traducción porque actúan como adaptadores. Cada tRNA tiene un sitio de unión para un aminoácido específico en su extremo 3' y un anticodón que se aparea con un codón complementario en el mRNA. Las enzimas aminoacil-tRNA sintetasas 'cargan' los aminoácidos en los tRNA, que luego entregan estos aminoácidos al ribosoma, asegurando que se incorpore el aminoácido correcto para cada codón del mRNA."
+            },
+            {
+                question: "¿Cuál de las siguientes características describe correctamente el código genético, según las clases?",
+                options: [
+                    "Es específico para cada especie, impidiendo la transferencia de genes entre ellas.",
+                    "Es ambiguo, lo que significa que un codón puede codificar varios aminoácidos diferentes.",
+                    "Es universal y es degenerado (la redundancia de codones aumenta la eficiencia de la traducción).",
+                    "Solo utiliza 3 bases para codificar los 20 aminoácidos, sin variaciones.",
+                    "No permite la clonación de genes humanos en bacterias debido a diferencias en su interpretación."
+                ],
+                correctAnswer: "Es universal y es degenerado (la redundancia de codones aumenta la eficiencia de la traducción).",
+                explanation: "El código genético posee dos propiedades clave: es universal, lo que significa que, con algunas excepciones menores, un codón específico (triplete de nucleótidos) codifica el mismo aminoácido en casi todos los organismos, desde bacterias hasta humanos. Esta universalidad es fundamental para la tecnología del DNA recombinante. Además, es degenerado, lo que indica que la mayoría de los aminoácidos están codificados por más de un codón; esta redundancia aumenta la robustez del código y la eficiencia de la traducción."
+            },
+            {
+                question: "¿Qué tipo de mutación es responsable de la Anemia falciforme?",
+                options: [
+                    "Una deleción completa de un gen.",
+                    "Una inserción de múltiples nucleótidos que altera el marco de lectura.",
+                    "Una mutación puntual (sustitución de un único nucleótido).",
+                    "Un cambio en el marco de lectura debido a una inserción en una parte clave del gen.",
+                    "Una translocación cromosómica a gran escala."
+                ],
+                correctAnswer: "Una mutación puntual (sustitución de un único nucleótido).",
+                explanation: "La anemia falciforme es un ejemplo clásico de cómo una pequeña alteración genética puede tener grandes consecuencias. Se describe que la enfermedad es causada por un cambio en un único nucleótido dentro del gen de la β-globina (uno de los polipéptidos de la hemoglobina), específicamente una sustitución de un par de bases. Este cambio puntual lleva a la codificación de un aminoácido diferente en la posición 6 de la proteína, lo que altera su estructura y función, causando los síntomas de la enfermedad."
+            },
+            {
+                question: "Según el material del curso, ¿cuál es la función última de un gen?",
+                options: [
+                    "Almacenar el código genético de forma permanente para la herencia.",
+                    "Replicar el ADN para asegurar la continuidad de la información genética.",
+                    "Producir una proteína que controle propiedades o rasgos metabólicos o físicos de un organismo.",
+                    "Transportar el código genético del núcleo al citoplasma para su lectura.",
+                    "Reconocer y destruir materiales extraños en el cuerpo."
+                ],
+                correctAnswer: "Producir una proteína que controle propiedades o rasgos metabólicos o físicos de un organismo.",
+                explanation: "El material establece explícitamente que 'La función última de un gen es producir una proteína'. Estas proteínas son las que, a su vez, controlan las propiedades o rasgos metabólicos o físicos de un organismo. Las otras opciones describen procesos relacionados con el material genético o funciones de otros componentes celulares, pero no la función primordial del gen en sí mismo."
+            },
+            {
+                question: "En las células humanas, ¿dónde tiene lugar el proceso de transcripción y qué enzima clave participa en él?",
+                options: [
+                    "En el citoplasma, mediado por la peptidil transferasa.",
+                    "En el núcleo, mediante la acción de la RNA polimerasa.",
+                    "En los ribosomas, regulado por los factores de iniciación.",
+                    "En la membrana celular, facilitado por proteínas receptoras.",
+                    "En el retículo endoplasmático, con la ayuda de enzimas de procesamiento."
+                ],
+                correctAnswer: "En el núcleo, mediante la acción de la RNA polimerasa.",
+                explanation: "El material en formato de video explica que la transcripción ocurre en el núcleo: 'El núcleo contiene el genoma... Cuando un gen se activa, una enzima llamada RNA polimerasa se une al inicio del gen. Se mueve a lo largo del ADN, creando una cadena de ARN mensajero a partir de bases libres en el núcleo. Este proceso se llama transcripción'. La traducción ocurre en el citoplasma."
+            },
+            {
+                question: "La anemia falciforme es un ejemplo de enfermedad genética causada por una mutación puntual. ¿Cómo puede una mutación de este tipo, como la descrita en el gen de la ß-globina, afectar la función de una proteína?",
+                options: [
+                    "Impidiendo que el mRNA procesado salga del núcleo hacia el citoplasma.",
+                    "Alterando la estructura de los ribosomas, lo que detiene el proceso de traducción.",
+                    "Dando lugar a la producción de una proteína alterada que funciona mal o que ya no codifica una proteína funcional.",
+                    "Disminuyendo la disponibilidad de aminoácidos esenciales en el citoplasma para la síntesis proteica.",
+                    "Cambiando la estructura del sitio anticodón en el tRNA, lo que impide la unión al mRNA."
+                ],
+                correctAnswer: "Dando lugar a la producción de una proteína alterada que funciona mal o que ya no codifica una proteína funcional.",
+                explanation: "Las fuentes afirman que una 'mutación de un gen puede dar lugar a la producción de una proteína alterada que funciona mal o en algunos casos ya no codifica una proteína funcional'. La anemia falciforme es un ejemplo directo, donde una mutación puntual en el gen de la ß-globina cambia el código genético, codificando para un aminoácido diferente en la hemoglobina, lo que resulta en una proteína defectuosa y los síntomas de la enfermedad."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = []; // Para almacenar las respuestas del usuario y poder mostrarlas al final
+
+        // Referencias a elementos del DOM
+        const quizSection = document.getElementById('quiz-section');
+        const questionNumberElement = document.getElementById('question-number');
+        const questionTextElement = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextButton = document.getElementById('next-button');
+        const resultsSection = document.getElementById('results-section');
+        const scoreDisplay = document.getElementById('score-display');
+        const correctAnswersDisplay = document.getElementById('correct-answers-display');
+
+        // Referencias para el Message Box
+        const messageBoxOverlay = document.getElementById('message-box-overlay');
+        const messageBoxTitle = document.getElementById('message-box-title');
+        const messageBoxText = document.getElementById('message-box-text');
+        const messageBoxOkButton = document.getElementById('message-box-ok-button');
+
+        // Función para mostrar el Message Box
+        function showMessageBox(title, message) {
+            messageBoxTitle.textContent = title;
+            messageBoxText.textContent = message;
+            messageBoxOverlay.classList.add('active');
+        }
+
+        // Event listener para cerrar el Message Box
+        messageBoxOkButton.addEventListener('click', () => {
+            messageBoxOverlay.classList.remove('active');
+        });
+
+        // Función para cargar la pregunta actual
+        function loadQuestion() {
+            // Eliminar clases de color anteriores
+            quizSection.className = 'question-section text-white';
+            // Añadir la clase de color del arcoíris según el índice
+            quizSection.classList.add(`bg-rainbow-${currentQuestionIndex % 7}`);
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionNumberElement.textContent = `Pregunta ${currentQuestionIndex + 1} de ${quizData.length}`;
+            questionTextElement.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = ''; // Limpiar opciones anteriores
+
+            currentQuestion.options.forEach((option, index) => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'answer';
+                input.value = option;
+                input.id = `option${index}`;
+
+                const span = document.createElement('span');
+                span.textContent = option;
+
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsContainer.appendChild(label);
+            });
+
+            // Deshabilitar el botón Siguiente si no hay una opción seleccionada
+            nextButton.disabled = true;
+            optionsContainer.addEventListener('change', () => {
+                nextButton.disabled = false;
+            }, { once: true }); // Solo escuchar el primer cambio para habilitar el botón
+        }
+
+        // Función para manejar el clic en el botón "Siguiente"
+        nextButton.addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+
+            if (!selectedOption) {
+                showMessageBox('Atención', 'Por favor, selecciona una opción antes de continuar.');
+                return;
+            }
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            const userAnswer = selectedOption.value;
+            const isCorrect = (userAnswer === currentQuestion.correctAnswer);
+
+            userAnswers.push({
+                question: currentQuestion.question,
+                userAnswer: userAnswer,
+                correctAnswer: currentQuestion.correctAnswer,
+                explanation: currentQuestion.explanation,
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        // Función para mostrar los resultados finales
+        function showResults() {
+            quizSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+
+            scoreDisplay.textContent = `${score} de ${quizData.length}`;
+
+            correctAnswersDisplay.innerHTML = '<h3>Respuestas Correctas y Explicaciones</h3>'; // Reiniciar el contenido
+
+            userAnswers.forEach((item, index) => {
+                const answerItem = document.createElement('div');
+                answerItem.classList.add('answer-item');
+
+                const questionText = document.createElement('p');
+                questionText.classList.add('question-text');
+                questionText.textContent = `${index + 1}. ${item.question}`;
+                answerItem.appendChild(questionText);
+
+                const userAnswerText = document.createElement('p');
+                userAnswerText.classList.add('user-answer');
+                userAnswerText.innerHTML = `Tu respuesta: <span class="${item.isCorrect ? 'text-green-600' : 'text-red-600'} font-semibold">${item.userAnswer}</span>`;
+                answerItem.appendChild(userAnswerText);
+
+                const correctOption = document.createElement('p');
+                correctOption.classList.add('correct-option');
+                correctOption.textContent = `Respuesta Correcta: ${item.correctAnswer}`;
+                answerItem.appendChild(correctOption);
+
+                const explanationText = document.createElement('p');
+                explanationText.classList.add('explanation-text');
+                explanationText.textContent = `Explicación: ${item.explanation}`;
+                answerItem.appendChild(explanationText);
+
+                correctAnswersDisplay.appendChild(answerItem);
+            });
+        }
+
+        // Cargar la primera pregunta al iniciar
+        document.addEventListener('DOMContentLoaded', loadQuestion);
+    </script>
+</body>
+</html>
