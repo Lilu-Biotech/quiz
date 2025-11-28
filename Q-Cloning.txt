@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Clonación de Genes y Expresión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@700&display=swap');
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #f0fdf4; /* Fondo verde muy suave (temática bio) */
+        }
+        
+        .serif-font {
+            font-family: 'Merriweather', serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 109, 119, 0.1);
+        }
+
+        /* Prevent selecting text */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Colores personalizados */
+        .btn-primary { background-color: #059669; } /* Verde esmeralda */
+        .btn-primary:hover { background-color: #047857; }
+        .text-primary { color: #059669; }
+        .border-primary { border-color: #059669; }
+        .bg-primary-light { background-color: #ecfdf5; }
+        
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden relative min-h-[500px] flex flex-col">
+        
+        <!-- Decorative header bar -->
+        <div class="h-2 w-full btn-primary"></div>
+
+        <!-- Content Area -->
+        <div class="flex-1 p-8 flex flex-col justify-center items-center text-center" id="app-content">
+            <!-- Dynamic Content Injected Here -->
+        </div>
+
+        <!-- Footer / Progress -->
+        <div class="bg-gray-50 p-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500" id="footer">
+            <span id="course-name">Ingeniería de Alimentos • Biotecnología</span>
+            <span id="progress-text" class="hidden">Pregunta <span id="current-q">1</span> de 15</span>
+        </div>
+    </div>
+
+    <script>
+        // --- QUIZ DATA (15 Questions) ---
+        const fullQuestionBank = [
+            {
+                id: 1,
+                question: "En la analogía de la 'Receta de Cocina', ¿qué elemento biológico representa el 'Plásmido'?",
+                options: [
+                    "El libro completo de cocina (Núcleo)",
+                    "La fotocopia de la receta (Vehículo)",
+                    "El chef (Ribosoma)",
+                    "El plato final (Proteína)"
+                ],
+                correct: 1
+            },
+            {
+                id: 2,
+                question: "¿Cuál es la principal desventaja de utilizar <i>E. coli</i> para producir proteínas humanas complejas?",
+                options: [
+                    "Crece demasiado lento.",
+                    "No realiza glicosilación (modificaciones post-traduccionales).",
+                    "Medios de cultivo muy costosos.",
+                    "Baja producción de biomasa."
+                ],
+                correct: 1
+            },
+            {
+                id: 3,
+                question: "¿Qué método de transformación se basa en aplicar cambios bruscos de temperatura (frío-calor)?",
+                options: [
+                    "Electroporación",
+                    "Biobalística",
+                    "Choque Térmico",
+                    "Microinyección"
+                ],
+                correct: 2
+            },
+            {
+                id: 4,
+                question: "¿Qué ventaja clave tienen las levaduras (<i>P. pastoris</i>) frente a las bacterias?",
+                options: [
+                    "Secretan la proteína al medio, facilitando su purificación.",
+                    "No requieren oxígeno para crecer.",
+                    "Son procariotas, por lo que son más simples.",
+                    "No necesitan vectores de clonación."
+                ],
+                correct: 0
+            },
+            {
+                id: 5,
+                question: "En 'Molecular Farming' (Plantas), ¿qué microorganismo se utiliza como ingeniero genético natural?",
+                options: [
+                    "Saccharomyces cerevisiae",
+                    "Agrobacterium tumefaciens",
+                    "Bacillus subtilis",
+                    "Lactobacillus bulgaricus"
+                ],
+                correct: 1
+            },
+            {
+                id: 6,
+                question: "¿Qué enzima actúa como el 'pegamento' molecular para unir el gen de interés al vector?",
+                options: [
+                    "ADN Polimerasa",
+                    "ADN Ligasa",
+                    "Enzima de restricción",
+                    "Helicasa"
+                ],
+                correct: 1
+            },
+            {
+                id: 7,
+                question: "¿Cuál es la función del gen de resistencia a antibióticos (marcador de selección) en un plásmido?",
+                options: [
+                    "Producir más proteína de interés.",
+                    "Permitir identificar y seleccionar solo las bacterias transformadas.",
+                    "Matar a las bacterias competidoras.",
+                    "Acelerar la duplicación del ADN."
+                ],
+                correct: 1
+            },
+            {
+                id: 8,
+                question: "En la producción de carne cultivada, ¿cuál es uno de los mayores desafíos actuales?",
+                options: [
+                    "El sabor es desagradable.",
+                    "El alto costo de los medios de cultivo celular.",
+                    "No se pueden cultivar células musculares.",
+                    "Es imposible que crezcan en biorreactores."
+                ],
+                correct: 1
+            },
+            {
+                id: 9,
+                question: "¿Qué técnica imita la selección natural acelerada millones de veces para mejorar una enzima?",
+                options: [
+                    "Diseño Racional",
+                    "Evolución Dirigida",
+                    "Mutagénesis de sitio",
+                    "Clonación posicional"
+                ],
+                correct: 1
+            },
+            {
+                id: 10,
+                question: "¿Qué proteína recombinante se usa hoy en día en el 90% de la producción mundial de queso duro?",
+                options: [
+                    "Insulina",
+                    "Pectinasa",
+                    "Quimosina",
+                    "Amilasa"
+                ],
+                correct: 2
+            },
+            {
+                id: 11,
+                question: "¿Qué es un 'Cuerpo de Inclusión' en la expresión de proteínas bacteriana?",
+                options: [
+                    "Un orgánulo nuevo creado por la bacteria.",
+                    "Agregados de proteína mal plegada e insoluble.",
+                    "El lugar donde se guarda el plásmido.",
+                    "Un tipo de virus que ataca la bacteria."
+                ],
+                correct: 1
+            },
+            {
+                id: 12,
+                question: "Para expresar proteínas en células de insecto, ¿qué sistema de vector viral es el más utilizado?",
+                options: [
+                    "Retrovirus",
+                    "Adenovirus",
+                    "Baculovirus",
+                    "Virus del Mosaico del Tabaco"
+                ],
+                correct: 2
+            },
+            {
+                id: 13,
+                question: "¿Qué es un 'Promotor' en un vector de expresión?",
+                options: [
+                    "Una proteína que ayuda a plegar otras proteínas.",
+                    "La secuencia de ADN donde se une la ARN polimerasa para iniciar la transcripción.",
+                    "El gen que da resistencia al antibiótico.",
+                    "El sitio donde corta la enzima de restricción."
+                ],
+                correct: 1
+            },
+            {
+                id: 14,
+                question: "¿En qué consiste la técnica de 'Electroporación' para transformar células?",
+                options: [
+                    "Usar virus para inyectar ADN.",
+                    "Aplicar pulsos eléctricos para abrir poros temporales en la membrana.",
+                    "Disparar micropartículas de oro con ADN.",
+                    "Usar productos químicos como cloruro de calcio."
+                ],
+                correct: 1
+            },
+            {
+                id: 15,
+                question: "¿Qué sistema de expresión elegirías si necesitas una proteína humana terapéutica con glicosilación 100% humana?",
+                options: [
+                    "Bacterias (E. coli)",
+                    "Levaduras (S. cerevisiae)",
+                    "Células de mamífero (CHO o HEK)",
+                    "Plantas transgénicas"
+                ],
+                correct: 2
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userName = "";
+
+        // --- DOM ELEMENTS ---
+        const contentDiv = document.getElementById('app-content');
+        const progressText = document.getElementById('progress-text');
+
+        // --- UTILS ---
+        
+        // Fisher-Yates Shuffle Algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // --- SCREENS ---
+
+        function renderStartScreen() {
+            progressText.classList.add('hidden');
+            contentDiv.innerHTML = `
+                <div class="fade-in max-w-md w-full">
+                    <div class="mb-6 text-primary text-6xl">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <h1 class="serif-font text-3xl text-gray-800 mb-4 font-bold">Quiz de Clonación</h1>
+                    <p class="text-gray-600 mb-8 text-lg">Cepas, vectores y expresión de proteínas. <br>15 preguntas aleatorias.</p>
+                    
+                    <div class="text-left mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                            Ingresa tu nombre completo:
+                        </label>
+                        <input class="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-green-500" id="username" type="text" placeholder="Ej: Pepito Pérez">
+                    </div>
+
+                    <button onclick="startQuiz()" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg transition duration-200 text-lg shadow-lg transform hover:-translate-y-1">
+                        Comenzar Evaluación
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderQuestion() {
+            progressText.classList.remove('hidden');
+            document.getElementById('progress-text').innerHTML = `Pregunta <span id="current-q">${currentQuestionIndex + 1}</span> de ${quizQuestions.length}`;
+            
+            const q = quizQuestions[currentQuestionIndex];
+
+            // Generate options HTML
+            let optionsHtml = '';
+            q.options.forEach((opt, index) => {
+                optionsHtml += `
+                    <button onclick="handleAnswer(${index})" class="option-card w-full text-left bg-white border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 text-gray-700 font-medium py-4 px-6 rounded-xl mb-3 transition duration-200 flex items-center group">
+                        <div class="h-8 w-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-4 group-hover:bg-green-600 group-hover:text-white transition">
+                            ${String.fromCharCode(65 + index)}
+                        </div>
+                        <span class="text-lg">${opt}</span>
+                    </button>
+                `;
+            });
+
+            contentDiv.innerHTML = `
+                <div class="fade-in w-full text-left">
+                    <h2 class="serif-font text-2xl text-gray-800 mb-8 font-bold leading-tight">
+                        ${q.question}
+                    </h2>
+                    <div class="space-y-2 no-select">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResult() {
+            progressText.classList.add('hidden');
+            
+            let message = "";
+            let icon = "";
+            let colorClass = "";
+            
+            // Grading logic for 15 questions
+            if (score >= 14) {
+                message = "¡Impecable! Eres un maestro de la biotecnología.";
+                icon = "fa-dna";
+                colorClass = "text-green-600";
+            } else if (score >= 10) {
+                message = "Muy bien hecho. Tienes conocimientos sólidos.";
+                icon = "fa-thumbs-up";
+                colorClass = "text-blue-600";
+            } else {
+                message = "Te recomiendo revisar las diapositivas nuevamente.";
+                icon = "fa-book-open";
+                colorClass = "text-orange-500";
+            }
+
+            contentDiv.innerHTML = `
+                <div class="fade-in w-full text-center">
+                    <div class="mb-6 ${colorClass} text-7xl">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <h2 class="serif-font text-3xl text-gray-800 mb-2 font-bold">Resultado Final</h2>
+                    <p class="text-xl text-gray-600 mb-6">Estudiante: <strong>${userName}</strong></p>
+                    
+                    <div class="bg-gray-100 rounded-xl p-6 mb-8 inline-block min-w-[200px]">
+                        <span class="block text-sm text-gray-500 uppercase tracking-wide">Calificación</span>
+                        <span class="text-5xl font-bold ${colorClass}">${score}/15</span>
+                    </div>
+                    
+                    <p class="text-gray-600 text-lg mb-8 italic">"${message}"</p>
+
+                    <button onclick="location.reload()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                        Volver al inicio
+                    </button>
+                </div>
+            `;
+        }
+
+        // --- LOGIC ---
+
+        window.startQuiz = function() {
+            const input = document.getElementById('username');
+            if (input.value.trim() === "") {
+                alert("Por favor ingresa tu nombre para continuar.");
+                return;
+            }
+            userName = input.value;
+            
+            score = 0;
+            currentQuestionIndex = 0;
+            
+            // Clone and Shuffle
+            quizQuestions = shuffleArray([...fullQuestionBank]);
+            
+            renderQuestion();
+        }
+
+        window.handleAnswer = function(selectedIndex) {
+            const currentQ = quizQuestions[currentQuestionIndex];
+            
+            if (selectedIndex === currentQ.correct) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < quizQuestions.length) {
+                renderQuestion();
+            } else {
+                renderResult();
+            }
+        }
+
+        // --- INIT ---
+        renderStartScreen();
+
+    </script>
+</body>
+</html>
